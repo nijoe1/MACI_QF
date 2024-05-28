@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 // External Libraries
 import {Constants, Metadata, IRegistry, IAllo, IVerifier} from "./interfaces/Constants.sol";
+
 import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 
 // Core Contracts
@@ -66,6 +67,9 @@ abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
 
     /// @notice The total number of recipients
     uint256 public recipientsCounter;
+
+    /// @notice The maximum number of recipients capped based on MACI circuit constraints
+    uint256 public maxRecipients;
 
     /// @notice Mapping to store the status of recipients in a bitmap
     mapping(uint256 => uint256) public statusesBitMap;
@@ -195,11 +199,14 @@ abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
     /// - 3: rejected
     /// - 4: appealed
     /// Emits the RecipientStatusUpdated() event.
+    /// Can only be called on the active registration period. Otherwise 
+    /// there is a risk of rejecting a recipient after the allocation has started.
+    /// and the votes for that recipient will be wasted toghether with the matching funds of the contributors
     /// @param statuses New statuses
     /// @param refRecipientsCounter The recipientCounter the transaction is based on
     function reviewRecipients(ApplicationStatus[] memory statuses, uint256 refRecipientsCounter)
         external
-        onlyBeforeAllocationEnds
+        onlyActiveRegistration
         onlyPoolManager(msg.sender)
     {
         if (refRecipientsCounter != recipientsCounter) revert INVALID();
@@ -246,7 +253,8 @@ abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
     /// @dev This will revert if any of the timestamps are invalid. This is determined by the strategy
     /// and may vary from strategy to strategy. Checks if '_registrationStartTime' is greater than the '_registrationEndTime'
     /// or if '_registrationStartTime' is greater than the '_allocationStartTime' or if '_registrationEndTime'
-    /// is greater than the '_allocationEndTime' or if '_allocationStartTime' is greater than the '_allocationEndTime'.
+    /// is greater than the '_allocationEndTime' or if '_allocationStartTime' is greater than the '_allocationEndTime'
+    /// or if '_registrationEndTime' is greater than '_allocationStartTime'.
     /// If any of these conditions are true, this will revert.
     /// @param _registrationStartTime The start time for the registration
     /// @param _registrationEndTime The end time for the registration
@@ -259,8 +267,15 @@ abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
         uint64 _allocationEndTime
     ) internal pure {
         if (
-            _registrationStartTime > _registrationEndTime || _registrationStartTime > _allocationStartTime
-                || _allocationStartTime > _allocationEndTime || _registrationEndTime > _allocationEndTime
+            _registrationStartTime > _registrationEndTime || 
+            _registrationStartTime > _allocationStartTime || 
+            _registrationEndTime > _allocationEndTime || 
+            _allocationStartTime > _allocationEndTime ||
+            // Added condition to ensure registrationEndTime cannot be greater than allocationStartTime
+            // This is to prevent accepting a recipient after the allocation has started
+            // Because in MACI votes are encrypted if a recipient is REJECTED after the allocation has started 
+            // the votes for that recipient will be wasted toghether with the matching funds of the contributors
+            _registrationEndTime > _allocationStartTime 
         ) {
             revert INVALID();
         }
@@ -293,6 +308,11 @@ abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
         address recipientAddress;
         address registryAnchor;
         Metadata memory metadata;
+
+        // Check if the maximum number of recipients has been reached
+        if (recipientsCounter > maxRecipients) {
+            revert MAX_RECIPIENTS_REACHED();
+        }
 
         // Decode data custom to this strategy
         if (useRegistryAnchor) {

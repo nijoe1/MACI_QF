@@ -128,6 +128,8 @@ contract QFMACI is QFMACIBase, DomainObjs, Params {
         );
 
         maciFactory = _params.maciParams.maciFactory;
+
+        maxRecipients = ClonableMACIFactory(maciFactory).getMaxVoteOptions(_params.maciParams.maciId);
     }
 
     /// =======================================

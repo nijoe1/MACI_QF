@@ -60,6 +60,7 @@ contract Constants {
     error RoundNotFinalized();
     error NothingToWithdraw();
     error ContributionWithdrawn();
+    error MAX_RECIPIENTS_REACHED();
 
 
     /// ======================

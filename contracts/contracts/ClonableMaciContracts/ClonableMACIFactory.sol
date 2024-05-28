@@ -16,6 +16,9 @@ import {TopupCredit} from "maci-contracts/contracts/TopupCredit.sol";
 import {DomainObjs} from "maci-contracts/contracts/utilities/DomainObjs.sol";
 
 contract ClonableMACIFactory is OwnableUpgradeable {
+    
+    uint8 internal constant TREE_ARITY = 5;
+
     struct MACI_SETTINGS {
         Params.TreeDepths treeDepths;
         uint8 stateTreeDepth;
@@ -173,5 +176,9 @@ contract ClonableMACIFactory is OwnableUpgradeable {
         _messageProcessor.transferOwnership(_owner);
 
         messageProcessorAddr = address(messageProcessor);
+    }
+
+    function getMaxVoteOptions(uint8 _maciId) public view returns (uint256) {
+        return TREE_ARITY ** maciSettings[_maciId].treeDepths.voteOptionTreeDepth;
     }
 }
