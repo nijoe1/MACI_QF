@@ -8,7 +8,7 @@ import {Multicall} from "@openzeppelin/contracts/utils/Multicall.sol";
 // Core Contracts
 import {BaseStrategy} from "../BaseStrategy.sol";
 
-abstract contract QFMACIBase is BaseStrategy, Multicall, Constants {
+abstract contract MACIQFBase is BaseStrategy, Multicall, Constants {
 
     /// ================================
     /// ========== Structs =============

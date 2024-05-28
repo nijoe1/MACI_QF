@@ -12,7 +12,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IAllo, IERC20, IVerifier} from "./interfaces/Constants.sol";
 import {QFMACIBase} from "./QFMACIBase.sol";
 
-contract QFMACI is QFMACIBase, DomainObjs, Params {
+contract MACIQF is QFMACIBase, DomainObjs, Params {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /// ======================
@@ -213,7 +213,7 @@ contract QFMACI is QFMACIBase, DomainObjs, Params {
     function _distributeFunds(bytes memory _claim) internal {
         claimFunds memory claim = abi.decode(_claim, (claimFunds));
 
-        uint256 index = claim.voteOptionIndex + 1;
+        uint256 index = claim.voteOptionIndex;
         address recipientId = recipientIndexToAddress[index];
         Recipient memory recipient = _recipients[recipientId];
 
@@ -336,7 +336,7 @@ contract QFMACI is QFMACIBase, DomainObjs, Params {
         uint256 _voteOptionIndex,
         uint256 _voiceCreditsToAllocate
     ) internal {
-        address recipientId = recipientIndexToAddress[_voteOptionIndex + 1];
+        address recipientId = recipientIndexToAddress[_voteOptionIndex];
         Recipient storage recipient = _recipients[recipientId];
 
         if (recipient.tallyVerified) {

@@ -10,9 +10,9 @@ import {Tally} from "maci-contracts/contracts/Tally.sol";
 import {Poll} from "maci-contracts/contracts/Poll.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IAllo, IERC20, IVerifier} from "./interfaces/Constants.sol";
-import {QFMACIBase} from "./QFMACIBase.sol";
+import {MACIQFBase} from "./MACIQFBase.sol";
 
-contract MACIQF is QFMACIBase, DomainObjs, Params {
+contract MACIQF is MACIQFBase, DomainObjs, Params {
     using EnumerableSet for EnumerableSet.UintSet;
 
     /// ======================
@@ -76,7 +76,7 @@ contract MACIQF is QFMACIBase, DomainObjs, Params {
     /// ====================================
 
     /// @notice Constructor to initialize the strategy with Allo address and name
-    constructor(address _allo, string memory _name) QFMACIBase(_allo, _name) {}
+    constructor(address _allo, string memory _name) MACIQFBase(_allo, _name) {}
 
     /// ====================================
     /// =========== Initialize =============
@@ -87,15 +87,15 @@ contract MACIQF is QFMACIBase, DomainObjs, Params {
     /// @param _data The initialization data for the strategy
     function initialize(uint256 _poolId, bytes memory _data) external virtual override onlyAllo {
         InitializeParamsMACI memory _initializeParams = abi.decode(_data, (InitializeParamsMACI));
-        __QFMACIStrategy_init(_poolId, _initializeParams);
+        __MACIQFStrategy_init(_poolId, _initializeParams);
         emit Initialized(_poolId, _data);
     }
 
     /// @notice Internal initialize function
     /// @param _poolId The ID of the pool
     /// @param _params The initialize params for the strategy
-    function __QFMACIStrategy_init(uint256 _poolId, InitializeParamsMACI memory _params) internal {
-        __QFMACIBaseStrategy_init(_poolId, _params.initializeParams);
+    function __MACIQFStrategy_init(uint256 _poolId, InitializeParamsMACI memory _params) internal {
+        __MACIQFBaseStrategy_init(_poolId, _params.initializeParams);
 
         address strategy = address(allo.getPool(_poolId).strategy);
         coordinator = _params.maciParams.coordinator;
@@ -219,7 +219,6 @@ contract MACIQF is QFMACIBase, DomainObjs, Params {
 
         uint256 amount = getAllocatedAmount(recipient.totalVotesReceived, claim.spent);
 
-        claim.voteOptionIndex = recipientToVoteIndex[recipientId];
         verifyClaim(claim);
 
         if (!_validateDistribution(index) || !_isAcceptedRecipient(recipientId) || amount == 0) {

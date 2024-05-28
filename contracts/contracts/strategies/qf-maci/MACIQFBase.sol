@@ -67,9 +67,6 @@ abstract contract MACIQFBase is BaseStrategy, Multicall, Constants {
     /// @notice The total number of recipients
     uint256 public recipientsCounter;
 
-    /// @notice The total number of accepted recipients
-    uint256 public acceptedRecipientsCounter;
-
     /// @notice Mapping to store the status of recipients in a bitmap
     mapping(uint256 => uint256) public statusesBitMap;
 
@@ -78,9 +75,6 @@ abstract contract MACIQFBase is BaseStrategy, Multicall, Constants {
 
     /// @notice Mapping from recipient index to their address
     mapping(uint256 => address) public recipientIndexToAddress;
-
-    /// @notice Mapping from recipient address to their vote index
-    mapping(address => uint256) public recipientToVoteIndex;
 
     /// @notice Mapping to track distributed claims in a bitmap
     mapping(uint256 => uint256) private distributedBitMap;
@@ -160,7 +154,7 @@ abstract contract MACIQFBase is BaseStrategy, Multicall, Constants {
     /// @notice Internal initialize function
     /// @param _poolId The ID of the pool
     /// @param _params The initialize params for the strategy
-    function __QFMACIBaseStrategy_init(uint256 _poolId, InitializeParams memory _params) internal {
+    function __MACIQFBaseStrategy_init(uint256 _poolId, InitializeParams memory _params) internal {
         __BaseStrategy_init(_poolId);
         useRegistryAnchor = _params.useRegistryAnchor;
         metadataRequired = _params.metadataRequired;
@@ -215,20 +209,6 @@ abstract contract MACIQFBase is BaseStrategy, Multicall, Constants {
             uint256 fullRow = statuses[i].statusRow;
 
             statusesBitMap[rowIndex] = fullRow;
-
-            address recipientId = recipientIndexToAddress[rowIndex];
-
-            if (recipientId == address(0)) {
-                revert INVALID();
-            }
-
-            if(Status(fullRow) == Status.Accepted) {
-                recipientToVoteIndex[recipientId] = acceptedRecipientsCounter;
-
-                unchecked {
-                    acceptedRecipientsCounter++;
-                }
-            }
 
             // Emit that the recipient status has been updated with the values
             emit RecipientStatusUpdated(rowIndex, fullRow, msg.sender);

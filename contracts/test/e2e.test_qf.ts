@@ -301,13 +301,13 @@ describe("e2e", function test() {
     const votingOption1 =
       await QFMACIStrategy.connect(Coordinator).recipientToStatusIndexes(
         recipientAddress1
-      );
+      ) - 1n;
 
     // create 1 vote message for the recipient1
     const votingOption2 =
       await QFMACIStrategy.connect(Coordinator).recipientToStatusIndexes(
         recipientAddress2
-      );
+      ) - 1n;
 
     console.log(recipientAddress1, recipientAddress2);
     // When submitting to the same vote index, the last vote weight will be the final vote weight
@@ -331,8 +331,8 @@ describe("e2e", function test() {
       ],
       pollId: 0n,
       Poll: pollContract,
-      publicKey: keypair.pubKey.serialize(),
-      privateKey: keypair.privKey.serialize(),
+      publicKey: keypair.pubKey,
+      privateKey: keypair.privKey,
       signer: allocator,
     });
 
@@ -355,8 +355,8 @@ describe("e2e", function test() {
       ],
       pollId: 0n,
       Poll: pollContract,
-      publicKey: keypair2.pubKey.serialize(),
-      privateKey: keypair2.privKey.serialize(),
+      publicKey: keypair2.pubKey,
+      privateKey: keypair2.privKey,
       signer: recipient1,
     });
 
@@ -520,7 +520,7 @@ describe("e2e", function test() {
 
     const recipientIndex1 = await QFMACIStrategy.recipientToStatusIndexes(
       await recipient1.getAddress()
-    );
+    ) - 1n;
 
     const distributeData1 = getRecipientClaimData(
       Number(recipientIndex1),
@@ -534,7 +534,7 @@ describe("e2e", function test() {
       Number(
         await QFMACIStrategy.recipientToStatusIndexes(
           await recipient2.getAddress()
-        )
+        ) - 1n
       ),
       recipientTreeDepth,
       tally
